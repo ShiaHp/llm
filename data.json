@@ -1,0 +1,59 @@
+[
+  {
+    "id": "866674529524416514",
+    "name": "air",
+    "imgUrl": "https://i.imgur.com/Zh8QGKm.jpeg",
+    "starterElement": true,
+    "createdAt": "2023-05-20T04:54:41.523Z",
+    "createdUserId": "",
+    "valid": true
+  },
+  {
+    "id": "866675965080207362",
+    "name": "dust",
+    "imgUrl": "https://i.imgur.com/ezyLnIv.png",
+    "starterElement": false,
+    "createdAt": "2023-05-20T05:01:59.552Z",
+    "createdUserId": "",
+    "isNewElement": false,
+    "challengeCredits": 0,
+    "challengeComplete": false,
+    "challengeLevelComplete": null
+  },
+  {
+    "id": "866674527284625410",
+    "name": "earth",
+    "imgUrl": "https://i.imgur.com/MVQZAIH.jpeg",
+    "starterElement": true,
+    "createdAt": "2023-05-20T04:54:40.764Z",
+    "createdUserId": "",
+    "valid": true
+  },
+  {
+    "id": "866674530522431490",
+    "name": "fire",
+    "imgUrl": "https://i.imgur.com/solE9oh.jpeg",
+    "starterElement": true,
+    "createdAt": "2023-05-20T04:54:41.827Z",
+    "createdUserId": "",
+    "valid": true
+  },
+  {
+    "id": "866674531518545922",
+    "name": "time",
+    "imgUrl": "https://i.imgur.com/dJyZadY.jpeg",
+    "starterElement": true,
+    "createdAt": "2023-05-20T04:54:42.131Z",
+    "createdUserId": "",
+    "valid": true
+  },
+  {
+    "id": "866674528530432002",
+    "name": "water",
+    "imgUrl": "https://i.imgur.com/81nYTcv.jpeg",
+    "starterElement": true,
+    "createdAt": "2023-05-20T04:54:41.219Z",
+    "createdUserId": "",
+    "valid": true
+  }
+]

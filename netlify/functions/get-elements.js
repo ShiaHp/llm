@@ -84,8 +84,16 @@ exports.handler = async (event, context) => {
     await purgeElementsWithNoRecipes();
   }
   const resp = allElements.map((e) => ({ ...e, valid: validateElement(e) }));
+
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  };
+
   return {
     statusCode: 200,
+    headers,
     body: JSON.stringify(resp, (_key, value) =>
       typeof value === "bigint" ? value.toString() : value
     ),

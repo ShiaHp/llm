@@ -65,7 +65,7 @@ async function generateElement(elements) {
     }
     temp = 0.8;
   }
-  logging.error("Failed to generate element name", elements);
+  // logging.error("Failed to generate element name", elements);
   throw new Error("Failed to generate element name");
 }
 
@@ -94,21 +94,24 @@ async function buildRecipe(recipeName, elementIds, userId) {
       },
     });
     isNewElement = true;
-  }
-  await prisma.AlchemyRecipe.create({
-    data: {
-      name: recipeName,
-      resultElementId: resultElement.id,
-      elements: {
-        create: [...new Set(elementIds)].map((id) => ({ elementId: id })),
+    {
+    }
+    await prisma.AlchemyRecipe.create({
+      data: {
+        name: recipeName,
+        resultElementId: resultElement.id,
+        elements: {
+          create: [...new Set(elementIds)].map((id) => ({ elementId: id })),
+        },
       },
-    },
-  });
-  return [resultElement, isNewElement];
+    });
+    return [resultElement, isNewElement];
+  }
 }
 
 exports.handler = async (event, context) => {
   const { elementIdsCsv, userId, date } = event.queryStringParameters;
+  // eslint-disable-next-line no-undef
   const elementIds = elementIdsCsv.split(",").map(BigInt).sort();
   const recipeName = "recipe:" + elementIds.join(",");
   const [recipe, challengeHistory] = await Promise.all([
@@ -117,13 +120,13 @@ exports.handler = async (event, context) => {
         name: recipeName,
       },
     }),
-    prisma.alchemyDailyChallengeOnCredits.findFirst({
-      where: { challenge: { date: date }, credits: { userId: userId } },
-      include: {
-        credits: true,
-        challenge: true,
-      },
-    }),
+    // prisma.alchemyDailyChallengeOnCredits.findFirst({
+    //   where: { challenge: { date: date }, credits: { userId: userId } },
+    //   include: {
+    //     credits: true,
+    //     challenge: true,
+    //   },
+    // }),
   ]);
   let resultElement;
   let isNewElement = false;
@@ -136,9 +139,11 @@ exports.handler = async (event, context) => {
       ...resultElement,
     };
   } else {
-    const credits = await prisma.AlchemyCredits.findFirst({
+    let credits = await prisma.AlchemyCredits.findFirst({
       where: { userId: userId },
     });
+
+    credits = 1000;
     if (credits.credits <= 0) {
       resp = {
         error:
@@ -211,8 +216,14 @@ exports.handler = async (event, context) => {
   resp.challengeCredits = challengeCredits;
   resp.challengeComplete = challengeComplete;
   resp.challengeLevelComplete = challengeLevelComplete;
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  };
   return {
     statusCode: 200,
+    headers,
     body: JSON.stringify(resp, (_key, value) =>
       typeof value === "bigint" ? value.toString() : value
     ),
