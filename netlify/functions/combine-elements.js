@@ -1,11 +1,17 @@
 const { PrismaClient } = require("@prisma/client");
-const { Configuration, OpenAIApi } = require("openai");
+const { OpenAI } = require("openai");
 
-const openai = new OpenAIApi(
-  new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-  })
-);
+// const openai = new OpenAIApi(
+//   new Configuration({
+//     apiKey: process.env.OPENAI_API_KEY,
+//   })
+// );
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://api.aimlapi.com",
+});
+
 const prisma = new PrismaClient();
 
 const ALCHEMY_SYSTEM_PROMPT = `
@@ -37,34 +43,40 @@ Respond ONLY with a single word which is the result item or thing. Do not respon
 `;
 
 async function generateElement(elements) {
+  console.log("elements", elements);
+
   let elementName = "";
   let temp = 0.1;
-  for (let i = 0; i < 10; i++) {
-    const llmResult = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      temperature: temp,
-      messages: [
-        {
-          role: "system",
-          content: ALCHEMY_SYSTEM_PROMPT,
-        },
-        {
-          role: "user",
-          content: elements.map((e) => e.name).join(" + "),
-        },
-      ],
-    });
-    elementName = llmResult.data.choices[0].message.content;
-    elementName = elementName.toLowerCase();
-    elementName = elementName.replace(/[^a-z'\- ]/g, "");
-    if (
-      elementName.length > 0 &&
-      (elementName.match(/([\s]+)/g) || "").length < 3
-    ) {
-      return elementName;
-    }
-    temp = 0.8;
+  // for (let i = 0; i < 10; i++) {
+  const chatCompletion = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo-16k",
+    messages: [
+      {
+        role: "system",
+        content: ALCHEMY_SYSTEM_PROMPT,
+      },
+      {
+        role: "user",
+        content: `What is the name of this new element created by combining ${elements[0].name} and ${elements[1].name}?`,
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 128,
+  });
+
+  elementName = chatCompletion.choices[0].message.content;
+  console.log("elementName", elementName);
+  elementName = elementName.toLowerCase();
+  elementName = elementName.replace(/[^a-z'\- ]/g, "");
+  if (
+    elementName.length > 0 &&
+    (elementName.match(/([\s]+)/g) || "").length < 10
+  ) {
+    console.log("elementName", elementName);
+    return elementName;
   }
+  temp = 0.8;
+  // }
   // logging.error("Failed to generate element name", elements);
   throw new Error("Failed to generate element name");
 }
@@ -90,7 +102,7 @@ async function buildRecipe(recipeName, elementIds, userId) {
       data: {
         name: elementName,
         imgUrl: "",
-        createdUserId: userId,
+        createdUserId: userId || null,
       },
     });
     isNewElement = true;
@@ -131,7 +143,7 @@ exports.handler = async (event, context) => {
   let resultElement;
   let isNewElement = false;
   let resp;
-  if (recipe) {
+  if (true) {
     resultElement = await prisma.AlchemyElement.findFirst({
       where: { id: recipe.resultElementId },
     });
@@ -139,11 +151,11 @@ exports.handler = async (event, context) => {
       ...resultElement,
     };
   } else {
-    let credits = await prisma.AlchemyCredits.findFirst({
-      where: { userId: userId },
-    });
+    // let credits = await prisma.AlchemyCredits.findFirst({
+    //   where: { userId: userId },
+    // });
 
-    credits = 1000;
+    let credits = 1000;
     if (credits.credits <= 0) {
       resp = {
         error:
@@ -156,13 +168,12 @@ exports.handler = async (event, context) => {
         elementIds,
         userId
       );
-      await prisma.AlchemyCredits.update({
-        where: { id: credits.id },
-        data: { credits: credits.credits - 1 },
-      });
+      // await prisma.AlchemyCredits.update({
+      //   where: { id: credits.id },
+      //   data: { credits: credits.credits - 1 },
+      // });
       resp = {
         ...resultElement,
-        creditsLeft: credits.credits - 1,
       };
     }
   }
@@ -170,49 +181,49 @@ exports.handler = async (event, context) => {
   let challengeCredits = 0;
   let challengeLevelComplete = null;
   let challengeComplete = false;
-  if (challengeHistory) {
-    const challenge = challengeHistory.challenge;
-    if (
-      !challengeHistory.completedEasy &&
-      challenge.elementEasyId === resultElement.id
-    ) {
-      challengeCredits = 5;
-      challengeComplete = true;
-      challengeLevelComplete = "easy";
-      await prisma.alchemyDailyChallengeOnCredits.update({
-        where: { id: challengeHistory.id },
-        data: { completedEasy: true },
-      });
-    } else if (
-      !challengeHistory.completedHard &&
-      challenge.elementHardId === resultElement.id
-    ) {
-      challengeCredits = 50;
-      challengeComplete = true;
-      challengeLevelComplete = "hard";
-      await prisma.alchemyDailyChallengeOnCredits.update({
-        where: { id: challengeHistory.id },
-        data: { completedHard: true },
-      });
-    } else if (
-      !challengeHistory.completedExpert &&
-      challenge.elementExpertId === resultElement.id
-    ) {
-      challengeCredits = 300;
-      challengeComplete = true;
-      challengeLevelComplete = "expert";
-      await prisma.alchemyDailyChallengeOnCredits.update({
-        where: { id: challengeHistory.id },
-        data: { completedExpert: true },
-      });
-    }
-    if (challengeCredits > 0) {
-      await prisma.AlchemyCredits.update({
-        where: { id: challengeHistory.credits.id },
-        data: { credits: { increment: challengeCredits } },
-      });
-    }
-  }
+  // if (challengeHistory) {
+  //   const challenge = challengeHistory.challenge;
+  //   if (
+  //     !challengeHistory.completedEasy &&
+  //     challenge.elementEasyId === resultElement.id
+  //   ) {
+  //     challengeCredits = 5;
+  //     challengeComplete = true;
+  //     challengeLevelComplete = "easy";
+  //     await prisma.alchemyDailyChallengeOnCredits.update({
+  //       where: { id: challengeHistory.id },
+  //       data: { completedEasy: true },
+  //     });
+  //   } else if (
+  //     !challengeHistory.completedHard &&
+  //     challenge.elementHardId === resultElement.id
+  //   ) {
+  //     challengeCredits = 50;
+  //     challengeComplete = true;
+  //     challengeLevelComplete = "hard";
+  //     await prisma.alchemyDailyChallengeOnCredits.update({
+  //       where: { id: challengeHistory.id },
+  //       data: { completedHard: true },
+  //     });
+  //   } else if (
+  //     !challengeHistory.completedExpert &&
+  //     challenge.elementExpertId === resultElement.id
+  //   ) {
+  //     challengeCredits = 300;
+  //     challengeComplete = true;
+  //     challengeLevelComplete = "expert";
+  //     await prisma.alchemyDailyChallengeOnCredits.update({
+  //       where: { id: challengeHistory.id },
+  //       data: { completedExpert: true },
+  //     });
+  //   }
+  //   if (challengeCredits > 0) {
+  //     await prisma.AlchemyCredits.update({
+  //       where: { id: challengeHistory.credits.id },
+  //       data: { credits: { increment: challengeCredits } },
+  //     });
+  //   }
+  // }
   resp.challengeCredits = challengeCredits;
   resp.challengeComplete = challengeComplete;
   resp.challengeLevelComplete = challengeLevelComplete;

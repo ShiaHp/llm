@@ -1,13 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
-const { Configuration, OpenAIApi } = require("openai");
 const request = require("request");
-
+const axios = require("axios");
 const prisma = new PrismaClient();
-const openai = new OpenAIApi(
-  new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-  })
-);
 
 function uploadImage(imageURL) {
   const options = {
@@ -35,32 +29,46 @@ exports.handler = async (event, context) => {
   let element = await prisma.AlchemyElement.findFirst({
     where: { id: BigInt(id) },
   });
-  if (!element.imgUrl && !skipRender) {
-    const imgResult = await openai.createImage({
-      prompt: `image of ${element.name}, white background`,
-      n: 1,
-      size: "256x256",
-      response_format: "url",
-    });
-    const imgURL = imgResult.data.data[0].url;
-    const imgurResult = await uploadImage(imgURL);
-    element = await prisma.AlchemyElement.update({
-      where: {
-        id: element.id,
-      },
-      data: {
-        imgUrl: imgurResult.data.link,
-      },
-    });
-  }
+
   const headers = {
+    Authorization: `Bearer ${process.env.LIMEWIRE_API_KEY}`,
+    "Content-Type": "application/json",
+    "X-Api-Version": "v1",
+    Accept: "application/json",
+  };
+
+  const payload = {
+    prompt: `image of ${element.name}, white background`,
+    aspect_ratio: "1:1",
+  };
+
+  // const response = await axios.post(
+  //   "https://api.limewire.com/api/image/generation",
+  //   payload,
+  //   { headers: headers }
+  // );
+
+  // const imgURL = response.data.data[0].url;
+
+  // const imgurResult = await uploadImage(imgURL);
+  // element = await prisma.AlchemyElement.update({
+  //   where: {
+  //     id: element.id,
+  //   },
+  //   data: {
+  //     imgUrl: imgurResult.data.link,
+  //   },
+  // });
+
+  const headersOptions = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   };
+
   return {
     statusCode: 200,
-    headers,
+    headers: headersOptions,
     body: JSON.stringify(element, (_key, value) =>
       typeof value === "bigint" ? value.toString() : value
     ),
