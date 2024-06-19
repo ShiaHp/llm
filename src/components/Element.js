@@ -11,6 +11,9 @@ function Element({
   name,
   pinned,
 }) {
+  const url = `https://translate.google.com/?sl=auto&tl=en&text=${encodeURIComponent(
+    name
+  )}`;
   const onProps = isTouchCapable
     ? { onTouchStart: (e) => onDragStart(e), onTouchEnd: (e) => onDragStop(e) }
     : { onMouseDown: (e) => onDragStart(e), onMouseUp: (e) => onDragStop(e) };
@@ -46,7 +49,9 @@ function Element({
           textOverflow: "ellipsis",
         }}
       >
-        <b>{name}</b>
+        <a href={url} target="_blank">
+          <b>{name}</b>
+        </a>
       </span>
       <img
         alt={""}

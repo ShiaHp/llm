@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useRef } from "react";
-import Element from "./Element";
-import { isTouchCapable, enableScroll, disableScroll } from "../lib/touch";
-import { useGetFetch, getDate } from "../lib/api";
-import { findIntersections, averagePosition } from "../lib/coords";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
+import { ExternalLinkIcon, SearchIcon } from "@chakra-ui/icons";
 import {
-  HStack,
-  InputGroup,
-  InputRightElement,
-  Input,
   Box,
   Button,
   Flex,
+  HStack,
+  Input,
+  InputGroup,
+  InputRightElement,
   Spacer,
 } from "@chakra-ui/react";
-import { SearchIcon, ExternalLinkIcon } from "@chakra-ui/icons";
+import React, { useEffect, useRef, useState } from "react";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import { getDate, useGetFetch } from "../lib/api";
+import { averagePosition, findIntersections } from "../lib/coords";
+import { disableScroll, enableScroll, isTouchCapable } from "../lib/touch";
 import ChallengeDetails from "./ChallengeDetails";
+import Element from "./Element";
 import OverviewDetails from "./OverviewDetails";
 
 const swal = withReactContent(Swal);
@@ -322,7 +322,7 @@ function ElementBox({
         <span></span>
         <Spacer />
         <Box fontSize={"0.8rem"}>
-          <a href="https://open.substack.com/pub/shrivu/p/infinite-alchemy?r=1g8kq6&utm_campaign=post&utm_medium=web&showWelcomeOnShare=true">
+          <a href="">
             Learn More <ExternalLinkIcon />
           </a>
         </Box>

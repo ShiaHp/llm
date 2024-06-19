@@ -13,6 +13,7 @@
     "axios": "^1.7.2",
     "framer-motion": "^10.12.12",
     "openai": "^4.51.0",
+    "pexels": "^1.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",

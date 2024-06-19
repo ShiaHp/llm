@@ -2,6 +2,25 @@ const { PrismaClient } = require("@prisma/client");
 const request = require("request");
 const axios = require("axios");
 const prisma = new PrismaClient();
+const { createClient } = require("pexels");
+
+const client = createClient(process.env.PEXELS_API_KEY);
+
+async function getPexelsImage(query) {
+  try {
+    const response = await client.photos.search({ query, per_page: 1 });
+    console.log("response", response.photos[0].src);
+    if (response && response.photos && response.photos.length > 0) {
+      return response.photos[0].src.original;
+    } else {
+      // If no results are found, return a placeholder image
+      return "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png";
+    }
+  } catch (error) {
+    console.error("Error fetching image from Pexels:", error);
+    throw error;
+  }
+}
 
 function uploadImage(imageURL) {
   const options = {
@@ -26,40 +45,25 @@ function uploadImage(imageURL) {
 
 exports.handler = async (event, context) => {
   const { id, skipRender } = event.queryStringParameters;
+  console.log("id", id);
   let element = await prisma.AlchemyElement.findFirst({
     where: { id: BigInt(id) },
   });
 
-  console.log("element", element);
-  const headers = {
-    Authorization: `Bearer ${process.env.LIMEWIRE_API_KEY}`,
-    "Content-Type": "application/json",
-    "X-Api-Version": "v1",
-    Accept: "application/json",
-  };
+  if (element && !element.imgUrl) {
+    const prompt = `${element.name}`;
+    const imgURL = await getPexelsImage(prompt);
 
-  const payload = {
-    prompt: `image of ${element.name}, white background`,
-    aspect_ratio: "1:1",
-  };
-
-  // const response = await axios.post(
-  //   "https://api.limewire.com/api/image/generation",
-  //   payload,
-  //   { headers: headers }
-  // );
-
-  // const imgURL = response.data.data[0].url;
-
-  // const imgurResult = await uploadImage(imgURL);
-  // element = await prisma.AlchemyElement.update({
-  //   where: {
-  //     id: element.id,
-  //   },
-  //   data: {
-  //     imgUrl: imgurResult.data.link,
-  //   },
-  // });
+    const imgurResult = await uploadImage(imgURL);
+    element = await prisma.AlchemyElement.update({
+      where: {
+        id: element.id,
+      },
+      data: {
+        imgUrl: imgurResult.data.link,
+      },
+    });
+  }
 
   const headersOptions = {
     "Access-Control-Allow-Origin": "*",
