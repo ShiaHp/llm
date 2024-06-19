@@ -30,6 +30,7 @@ exports.handler = async (event, context) => {
     where: { id: BigInt(id) },
   });
 
+  console.log("element", element);
   const headers = {
     Authorization: `Bearer ${process.env.LIMEWIRE_API_KEY}`,
     "Content-Type": "application/json",
